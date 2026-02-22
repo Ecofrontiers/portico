@@ -1,0 +1,43 @@
+# Portico + Ollama — local AI inference in two containers
+# Usage: docker compose up -d
+
+services:
+  portico:
+    build: .
+    ports:
+      - "3040:3040"
+    volumes:
+      - ./portico.yml:/app/portico.yml:ro
+    environment:
+      - PORTICO_CONFIG=/app/portico.yml
+      # Uncomment and set API keys for remote providers:
+      # - OPENAI_API_KEY=sk-...
+      # - ANTHROPIC_API_KEY=sk-ant-...
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+    restart: unless-stopped
+    # Uncomment for GPU passthrough:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-data:

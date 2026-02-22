@@ -1,0 +1,98 @@
+# Portico Gateway Configuration
+# Documentation: https://github.com/Ecofrontiers/portico
+
+server:
+  port: 3040
+  host: 0.0.0.0
+
+# Authentication (optional — off by default)
+# When enabled, all inference endpoints require a Bearer token.
+# Health and status endpoints remain open.
+auth:
+  enabled: false
+  # keys:
+  #   - pk-your-api-key-here
+  # Or set PORTICO_API_KEYS=pk-key1,pk-key2 in .env
+
+# Privacy routing — controls where queries can be sent.
+# Every query is classified as: local-only | local-preferred | remote-ok
+privacy:
+  # Default classification when no header or pattern match
+  default: local-preferred
+
+  # PII pattern detection — queries matching these patterns are forced local-only
+  patterns:
+    enabled: true
+    # Built-in patterns: email, phone, ssn, credit-card, ip-address
+    # Add custom patterns:
+    # custom:
+    #   - name: employee-id
+    #     regex: "EMP-\\d{6}"
+
+# Backend definitions — where queries actually go
+backends:
+  local:
+    # Ollama (default local backend)
+    - name: ollama
+      type: ollama
+      url: http://localhost:11434
+      models:
+        - llama3.2
+        - mistral
+        - codellama
+      # priority: 1  # lower = preferred
+
+    # vLLM (uncomment to enable)
+    # - name: vllm
+    #   type: openai-compatible
+    #   url: http://localhost:8000
+    #   models:
+    #     - meta-llama/Llama-3.1-8B-Instruct
+
+    # llama.cpp server (uncomment to enable)
+    # - name: llamacpp
+    #   type: openai-compatible
+    #   url: http://localhost:8080
+    #   models:
+    #     - default
+
+  remote:
+    # OpenAI
+    - name: openai
+      type: openai
+      # API key from env: OPENAI_API_KEY
+      models:
+        - gpt-4o
+        - gpt-4o-mini
+
+    # Anthropic
+    - name: anthropic
+      type: anthropic
+      # API key from env: ANTHROPIC_API_KEY
+      models:
+        - claude-sonnet-4-20250514
+
+    # Mistral
+    - name: mistral
+      type: mistral
+      # API key from env: MISTRAL_API_KEY
+      models:
+        - mistral-large-latest
+
+  # Federated Portico peers (v2)
+  # federated:
+  #   - name: university-lib
+  #     url: https://portico.library.example.edu
+  #     trust: local-preferred  # treat peer queries like local
+
+# Carbon-aware routing (optional — off by default)
+carbon:
+  enabled: false
+  # provider: electricity-maps
+  # zone: DE  # Your grid zone (ISO 3166-1 alpha-2)
+  # poll_interval: 300  # seconds
+
+# Logging
+logging:
+  level: info  # debug | info | warn | error
+  # file: /var/log/portico/gateway.log
